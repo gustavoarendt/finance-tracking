@@ -17,10 +17,15 @@ public class Expense {
     @Column(name = "valor")
     private BigDecimal value;
     @Column(name = "data")
-    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate date;
 
     public Expense() {
+    }
+
+    public Expense(String description, BigDecimal value, LocalDate date) {
+        this.description = description;
+        this.value = value;
+        this.date = date;
     }
 
     public Expense(Long id, String description, BigDecimal value, LocalDate date) {
