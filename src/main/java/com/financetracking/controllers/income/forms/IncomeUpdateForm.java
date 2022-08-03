@@ -43,4 +43,9 @@ public class IncomeUpdateForm {
         income.setDate(date);
         return income;
     }
+
+    public boolean checkEquality(Income income) {
+        return income.getDate().getMonth() == this.date.getMonth() &&
+                income.getDescription().equals(this.description);
+    }
 }

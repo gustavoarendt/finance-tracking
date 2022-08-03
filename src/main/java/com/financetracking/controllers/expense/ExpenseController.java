@@ -5,6 +5,7 @@ import com.financetracking.controllers.expense.dtos.ExpenseDto;
 import com.financetracking.controllers.expense.forms.ExpenseForm;
 import com.financetracking.controllers.expense.forms.ExpenseUpdateForm;
 import com.financetracking.models.Expense;
+import com.financetracking.models.Validation;
 import com.financetracking.repositories.ExpenseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/expense")
@@ -40,7 +44,11 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ResponseEntity<ExpenseDto> registry(@RequestBody @Valid ExpenseForm form, UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<?> registry(@RequestBody @Valid ExpenseForm form, UriComponentsBuilder uriComponentsBuilder) {
+        List<Expense> expenseList = expenseRepository.findByMonthAndDescription(form.getDate().getMonth(), form.getDescription());
+        if (expenseList.size() > 0) {
+            return ResponseEntity.badRequest().body(Validation.ALREADY_EXISTS);
+        }
         Expense expense = form.convert(form);
         expenseRepository.save(expense);
 
@@ -50,9 +58,12 @@ public class ExpenseController {
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<ExpenseDto> update(@RequestBody @Valid ExpenseUpdateForm form, @PathVariable Long id) {
+    public ResponseEntity<?> update(@RequestBody @Valid ExpenseUpdateForm form, @PathVariable Long id) {
         Optional<Expense> optional = expenseRepository.findById(id);
         if (optional.isPresent()) {
+            List<Expense> expenseList = expenseRepository.findByMonthAndDescription(form.getDate().getMonth(), form.getDescription());
+            boolean invalid = expenseList.stream().anyMatch(item -> !item.getId().equals(id));
+            if (invalid) return ResponseEntity.badRequest().body(Validation.ALREADY_EXISTS);
             Expense expense = form.update(id, expenseRepository);
             return ResponseEntity.ok(new ExpenseDto(expense));
         }

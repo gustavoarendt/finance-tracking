@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 
 @Entity
 @Table(name = "despesas")
@@ -18,6 +19,8 @@ public class Expense {
     private BigDecimal value;
     @Column(name = "data")
     private LocalDate date;
+    @Column(name = "mes")
+    private Month month;
 
     public Expense() {
     }
@@ -26,13 +29,7 @@ public class Expense {
         this.description = description;
         this.value = value;
         this.date = date;
-    }
-
-    public Expense(Long id, String description, BigDecimal value, LocalDate date) {
-        this.id = id;
-        this.description = description;
-        this.value = value;
-        this.date = date;
+        this.month = date.getMonth();
     }
 
     public Long getId() {
@@ -65,5 +62,13 @@ public class Expense {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public Month getMonth() {
+        return month;
+    }
+
+    public void setMonth(Month month) {
+        this.month = month;
     }
 }

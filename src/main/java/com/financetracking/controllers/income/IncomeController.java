@@ -4,7 +4,9 @@ import com.financetracking.controllers.income.dtos.IncomeDetailedDto;
 import com.financetracking.controllers.income.dtos.IncomeDto;
 import com.financetracking.controllers.income.forms.IncomeForm;
 import com.financetracking.controllers.income.forms.IncomeUpdateForm;
+import com.financetracking.models.Expense;
 import com.financetracking.models.Income;
+import com.financetracking.models.Validation;
 import com.financetracking.repositories.IncomeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/income")
@@ -40,7 +43,11 @@ public class IncomeController {
     }
 
     @PostMapping
-    public ResponseEntity<IncomeDto> registry(@RequestBody @Valid IncomeForm form, UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<?> registry(@RequestBody @Valid IncomeForm form, UriComponentsBuilder uriComponentsBuilder) {
+        List<Income> incomeList = incomeRepository.findByMonthAndDescription(form.getDate().getMonth(), form.getDescription());
+        if (incomeList.size() > 0) {
+            return ResponseEntity.badRequest().body(Validation.ALREADY_EXISTS);
+        }
         Income income = form.convert(form);
         incomeRepository.save(income);
 
@@ -50,9 +57,12 @@ public class IncomeController {
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<IncomeDto> update(@RequestBody @Valid IncomeUpdateForm form, @PathVariable Long id) {
+    public ResponseEntity<?> update(@RequestBody @Valid IncomeUpdateForm form, @PathVariable Long id) {
         Optional<Income> optional = incomeRepository.findById(id);
         if (optional.isPresent()) {
+            List<Income> incomeList = incomeRepository.findByMonthAndDescription(form.getDate().getMonth(), form.getDescription());
+            boolean invalid = incomeList.stream().anyMatch(item -> !item.getId().equals(id));
+            if (invalid) return ResponseEntity.badRequest().body(Validation.ALREADY_EXISTS);
             Income income = form.update(id, incomeRepository);
             return ResponseEntity.ok(new IncomeDto(income));
         }

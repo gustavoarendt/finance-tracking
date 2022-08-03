@@ -34,4 +34,9 @@ public class IncomeForm {
     public LocalDate getDate() {
         return date;
     }
+
+    public boolean checkEquality(Income income) {
+        return income.getDate().getMonth() == this.date.getMonth() &&
+                income.getDescription().equals(this.description);
+    }
 }
